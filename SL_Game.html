@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Little Expert · Smart Discovery Journey</title>
+<style>
+/* ============================================================
+   AI Little Expert · Smart Discovery Journey (English Version)
+   AI Literacy educational game for elementary students (Grades 5-6)
+   Single file: inline CSS + JavaScript
+   ============================================================ */
+
+/* ---------- Global reset & base variables ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Bright but comfortable child-friendly colors */
+  --c-pink:   #ff6b9d;
+  --c-yellow: #ffd93d;
+  --c-green:  #6bcb77;
+  --c-blue:   #4d96ff;
+  --c-purple: #a66cff;
+  --c-orange: #ff9f43;
+  --c-cyan:   #00cec9;
+
+  --c-bg1: #a8edea;
+  --c-bg2: #fed6e3;
+  --c-card: #ffffff;
+  --c-text: #2d3436;
+  --c-muted: #636e72;
+  --c-correct: #00b894;
+  --c-wrong: #e17055;
+
+  --radius: 24px;
+  --shadow: 0 10px 30px rgba(0,0,0,.12);
+  --shadow-sm: 0 4px 12px rgba(0,0,0,.08);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: "Comic Sans MS", "Segoe UI", "Arial", sans-serif;
+  color: var(--c-text);
+  background: linear-gradient(135deg, var(--c-bg1), var(--c-bg2));
+  background-attachment: fixed;
+  overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ---------- Floating decorative background (stars + bubbles) ---------- */
+.deco {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.deco span {
+  position: absolute;
+  display: block;
+  opacity: .55;
+  animation: floatY 8s ease-in-out infinite;
+}
+.deco span:nth-child(1){ left:6%;  top:12%; font-size:42px; animation-delay:0s; }
+.deco span:nth-child(2){ left:88%; top:18%; font-size:34px; animation-delay:1.2s; }
+.deco span:nth-child(3){ left:14%; top:78%; font-size:38px; animation-delay:2.1s; }
+.deco span:nth-child(4){ left:82%; top:72%; font-size:46px; animation-delay:.6s; }
+.deco span:nth-child(5){ left:48%; top:8%;  font-size:30px; animation-delay:1.8s; }
+.deco span:nth-child(6){ left:42%; top:88%; font-size:36px; animation-delay:3s; }
+@keyframes floatY {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50%     { transform: translateY(-22px) rotate(8deg); }
+}
+
+/* ---------- Screen container ---------- */
+.screen {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 880px;
+  background: var(--c-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 32px;
+  display: none;
+  animation: popIn .5s cubic-bezier(.2,.9,.3,1.3);
+}
+.screen.active { display: block; }
+@keyframes popIn {
+  0%   { transform: scale(.85); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+/* ---------- General buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  padding: 14px 36px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--c-pink), var(--c-purple));
+  box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 8px 20px rgba(255,107,157,.4);
+  transition: transform .15s, box-shadow .15s;
+  user-select: none;
+}
+.btn:hover    { transform: translateY(-2px); }
+.btn:active   { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+.btn.green    { background: linear-gradient(135deg, var(--c-green), var(--c-cyan)); box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 8px 20px rgba(107,203,119,.4);}
+.btn.blue     { background: linear-gradient(135deg, var(--c-blue), var(--c-purple)); box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 8px 20px rgba(77,150,255,.4);}
+.btn.orange   { background: linear-gradient(135deg, var(--c-orange), var(--c-yellow)); color:#5a3e00; box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 8px 20px rgba(255,159,67,.4);}
+.btn.ghost    { background: #fff; color: var(--c-purple); border: 3px solid var(--c-purple); box-shadow: 0 6px 0 rgba(166,108,255,.2);}
+
+/* ============================================================
+   Start Screen
+   ============================================================ */
+.start-inner { text-align: center; }
+.badge {
+  display: inline-block;
+  background: var(--c-yellow);
+  color: #5a3e00;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.title {
+  font-size: 52px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--c-pink), var(--c-purple), var(--c-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.subtitle {
+  font-size: 20px;
+  color: var(--c-muted);
+  margin-bottom: 28px;
+}
+.robot {
+  font-size: 90px;
+  margin: 10px 0 20px;
+  display: inline-block;
+  animation: robotBounce 2s ease-in-out infinite;
+}
+@keyframes robotBounce {
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50%     { transform: translateY(-14px) rotate(3deg); }
+}
+/* Name Input Styling */
+.name-input-wrap {
+  margin: 18px auto 24px;
+  max-width: 320px;
+  text-align: center;
+}
+.name-input-wrap label {
+  display: block;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--c-purple);
+  margin-bottom: 8px;
+}
+.name-input-wrap input {
+  width: 100%;
+  padding: 12px 18px;
+  border: 3px solid #eef0ff;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  background: #f8f9ff;
+  color: var(--c-text);
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.name-input-wrap input:focus {
+  border-color: var(--c-purple);
+  background: #fff;
+}
+.stage-previews {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin: 26px 0 30px;
+  flex-wrap: wrap;
+}
+.stage-pill {
+  flex: 1 1 160px;
+  background: #f8f9ff;
+  border: 3px solid #eef0ff;
+  border-radius: 18px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.stage-pill .emoji { font-size: 34px; display:block; margin-bottom:6px; }
+.stage-pill .label { font-weight: 800; font-size: 15px; color: var(--c-purple);}
+.stage-pill .desc  { font-size: 12px; color: var(--c-muted); margin-top:2px; }
+
+/* ============================================================
+   Instructions Screen
+   ============================================================ */
+.instr-title { font-size: 30px; font-weight: 900; color: var(--c-purple); margin-bottom: 18px; text-align:center;}
+.rules { display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-bottom: 26px;}
+.rule-card {
+  background: linear-gradient(135deg,#f8f9ff,#fff);
+  border: 3px solid #eef0ff;
+  border-radius: 18px;
+  padding: 16px;
+}
+.rule-card .ico { font-size: 30px; }
+.rule-card h4 { font-size: 16px; color: var(--c-blue); margin: 6px 0 4px;}
+.rule-card p  { font-size: 14px; color: var(--c-muted); line-height: 1.5;}
+.center-row { text-align:center; }
+
+/* ============================================================
+   Game Screen
+   ============================================================ */
+.hud {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.stage-tag {
+  background: linear-gradient(135deg, var(--c-blue), var(--c-purple));
+  color:#fff; font-weight:800; padding:8px 18px; border-radius:999px;
+  font-size: 15px; box-shadow: var(--shadow-sm);
+}
+.score-box {
+  background: var(--c-yellow); color:#5a3e00; font-weight:800;
+  padding:8px 18px; border-radius:999px; font-size:15px;
+  box-shadow: var(--shadow-sm);
+}
+.progress-wrap { width:100%; background:#eef0ff; border-radius:999px; height:14px; overflow:hidden; margin-bottom: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,.06);}
+.progress-bar {
+  height:100%; width:0%;
+  background: linear-gradient(90deg, var(--c-green), var(--c-cyan));
+  border-radius:999px; transition: width .5s ease;
+}
+
+.question-card {
+  background: linear-gradient(135deg,#fff,#fbfbff);
+  border: 3px solid #eef0ff;
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.q-stem {
+  font-size: 20px; font-weight: 800; line-height: 1.5;
+  margin-bottom: 20px; color: var(--c-text);
+}
+.q-stem .q-emoji { margin-right:8px; }
+
+/* Multiple choice options */
+.options { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+.option {
+  text-align:left; background:#fff; border:3px solid #eef0ff;
+  border-radius:16px; padding:16px 18px; font-size:16px; font-weight:600;
+  cursor:pointer; font-family:inherit; color:var(--c-text);
+  transition: all .2s; display:flex; align-items:center; gap:12px;
+}
+.option:hover { border-color: var(--c-purple); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.option .key {
+  flex-shrink:0; width:34px; height:34px; border-radius:50%;
+  background:#eef0ff; color:var(--c-purple); font-weight:800;
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+.option.correct { border-color: var(--c-correct); background:#e8f8f3; animation: shakeGood .5s;}
+.option.wrong   { border-color: var(--c-wrong);   background:#fdecea; animation: shakeBad .4s;}
+.option.disabled { pointer-events:none; opacity:.7; }
+@keyframes shakeGood {
+  0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
+}
+@keyframes shakeBad {
+  0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(5px);}
+}
+
+/* Smart hint box */
+.hint-box {
+  margin-top: 18px; padding: 14px 18px; border-radius: 16px;
+  background: #fff8e1; border-left: 6px solid var(--c-orange);
+  font-size: 15px; color: #7a5a00; line-height: 1.5;
+  display:none;
+}
+.hint-box.show { display:block; animation: popIn .3s; }
+.hint-box b { color: var(--c-orange); }
+
+/* Stage bottom action area */
+.action-row { text-align:center; margin-top: 22px; }
+
+/* ============================================================
+   Stage 2: Matching
+   ============================================================ */
+.match-area { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+.match-col h3 { font-size:16px; color:var(--c-purple); margin-bottom:10px; text-align:center;}
+.scenario-list, .category-list { display:flex; flex-direction:column; gap:10px;}
+.scenario {
+  background:#fff; border:3px solid #eef0ff; border-radius:14px;
+  padding:12px 14px; cursor:pointer; font-size:15px; font-weight:600;
+  transition: all .2s; display:flex; align-items:center; gap:10px;
+}
+.scenario:hover { border-color: var(--c-purple); transform: translateX(4px);}
+.scenario.selected { border-color: var(--c-purple); background:#f0ebff; }
+.scenario.matched  { border-color: var(--c-correct); background:#e8f8f3; opacity:.85; pointer-events:none;}
+.scenario.matched::after { content:"✓"; margin-left:auto; color:var(--c-correct); font-weight:900;}
+
+.category {
+  background: linear-gradient(135deg, var(--c-cyan), var(--c-blue));
+  color:#fff; border-radius:14px; padding:14px; cursor:pointer;
+  font-size:15px; font-weight:700; text-align:center;
+  transition: all .2s; box-shadow: var(--shadow-sm);
+}
+.category:hover { transform: scale(1.03); }
+.category:nth-child(2) { background: linear-gradient(135deg, var(--c-pink), var(--c-purple));}
+.category:nth-child(3) { background: linear-gradient(135deg, var(--c-orange), var(--c-yellow)); color:#5a3e00;}
+.category:nth-child(4) { background: linear-gradient(135deg, var(--c-green), var(--c-cyan));}
+.category .cat-emoji { display:block; font-size:26px; margin-bottom:4px;}
+.match-hint {
+  text-align:center; color: var(--c-muted); font-size:14px;
+  margin-top: 14px; min-height: 22px;
+}
+
+/* ============================================================
+   Final Screen
+   ============================================================ */
+.final-inner { text-align:center; }
+.rank-icon { font-size: 90px; margin: 10px 0; display:inline-block; animation: popIn .6s; }
+.final-score-label { font-size:18px; color:var(--c-muted); }
+.final-score {
+  font-size: 64px; font-weight: 900;
+  background: linear-gradient(135deg, var(--c-pink), var(--c-purple));
+  -webkit-background-clip: text; background-clip:text; color:transparent;
+  line-height:1; margin: 8px 0 4px;
+}
+.rank-title { font-size: 28px; font-weight:900; margin: 10px 0; color: var(--c-blue);}
+.rank-desc { font-size: 17px; color: var(--c-muted); line-height:1.6; max-width:560px; margin: 0 auto 22px;}
+.stars { font-size: 40px; letter-spacing: 6px; margin: 10px 0;}
+.leaderboard-actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:18px; }
+.save-status { color:var(--c-muted); font-size:14px; margin:0 0 18px; }
+.leaderboard-title { font-size:30px; font-weight:900; color:var(--c-purple); text-align:center; margin-bottom:8px; }
+.leaderboard-desc { color:var(--c-muted); text-align:center; margin-bottom:20px; }
+.leaderboard-wrap { overflow-x:auto; border:3px solid #eef0ff; border-radius:16px; }
+.leaderboard-table { width:100%; border-collapse:collapse; text-align:left; }
+.leaderboard-table th, .leaderboard-table td { padding:12px 14px; border-bottom:2px solid #eef0ff; }
+.leaderboard-table th { color:var(--c-purple); background:#f8f9ff; font-size:14px; }
+.leaderboard-table tbody tr:last-child td { border-bottom:0; }
+.leaderboard-table td:first-child, .leaderboard-table td:last-child { font-weight:800; white-space:nowrap; }
+.leaderboard-empty, .leaderboard-error { text-align:center; padding:24px; color:var(--c-muted); }
+.leaderboard-error { color:var(--c-wrong); }
+.confetti { position:fixed; inset:0; pointer-events:none; z-index:5; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px){
+  .screen { padding: 22px 16px; }
+  .title { font-size: 38px; }
+  .options { grid-template-columns: 1fr; }
+  .match-area { grid-template-columns: 1fr; }
+  .robot { font-size: 70px; }
+  .q-stem { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Floating decorative background -->
+<div class="deco" aria-hidden="true">
+  <span>🤖</span><span>⭐</span><span>💡</span>
+  <span>🚀</span><span>✨</span><span>🧠</span>
+</div>
+
+<!-- ============================================================
+     1. Start Screen
+     ============================================================ -->
+<section id="screen-start" class="screen active">
+  <div class="start-inner">
+    <span class="badge">🎓 AI Literacy · Grades 5-6</span>
+    <div class="robot">🤖</div>
+    <h1 class="title">AI Little Expert</h1>
+    <p class="subtitle">Join the little robot on a smart discovery journey!</p>
+    <!-- Name Input Section -->
+    <div class="name-input-wrap">
+      <label for="playerName">Enter Your Name, AI Hero! 🌟</label>
+      <input type="text" id="playerName" placeholder="e.g. Juan / Maria" maxlength="15" required />
+    </div>
+    <div class="stage-previews">
+      <div class="stage-pill">
+        <span class="emoji">🧩</span>
+        <div class="label">Stage 1</div>
+        <div class="desc">Concepts</div>
+      </div>
+      <div class="stage-pill">
+        <span class="emoji">🗂️</span>
+        <div class="label">Stage 2</div>
+        <div class="desc">Applications</div>
+      </div>
+      <div class="stage-pill">
+        <span class="emoji">⚖️</span>
+        <div class="label">Stage 3</div>
+        <div class="desc">Ethics</div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="showInstructions(); playSound('click')">
+      🚀 Start Game
+    </button>
+    <div class="leaderboard-actions">
+      <button class="btn ghost" onclick="showLeaderboard('screen-start'); playSound('click')">
+        🏆 View Leaderboard
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     2. Instructions Screen
+     ============================================================ -->
+<section id="screen-instructions" class="screen">
+  <h2 class="instr-title">📖 How to Play</h2>
+  <div class="rules">
+    <div class="rule-card">
+      <div class="ico">🎯</div>
+      <h4>Play Through Stages</h4>
+      <p>There are 3 stages with different question types. Challenge them in order!</p>
+    </div>
+    <div class="rule-card">
+      <div class="ico">⭐</div>
+      <h4>Scoring</h4>
+      <p>Each correct answer earns +10 points. Wrong answers don't deduct points — try freely!</p>
+    </div>
+    <div class="rule-card">
+      <div class="ico">💡</div>
+      <h4>Smart Hints</h4>
+      <p>If you get it wrong, a helpful hint will appear to guide you to the right answer.</p>
+    </div>
+    <div class="rule-card">
+      <div class="ico">🏆</div>
+      <h4>Final Ranking</h4>
+      <p>After all stages, you'll get a star rating and an encouraging message. Your name and score will also be saved to this device's leaderboard.</p>
+    </div>
+  </div>
+  <div class="center-row">
+    <button class="btn green" onclick="startGame(); playSound('click')">
+      Start Playing ▶
+    </button>
+  </div>
+</section>
+
+<!-- ============================================================
+     3. Game Screen
+     ============================================================ -->
+<section id="screen-game" class="screen">
+  <div class="hud">
+    <div class="stage-tag" id="stageTag">Stage 1 · Concepts 🧩</div>
+    <div class="score-box">⭐ Score: <span id="scoreText">0</span></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Question rendering area -->
+  <div id="questionArea"></div>
+
+  <div class="action-row" id="actionRow"></div>
+</section>
+
+<!-- ============================================================
+     4. Final Screen
+     ============================================================ -->
+<section id="screen-final" class="screen">
+  <div class="final-inner">
+    <div class="rank-icon" id="rankIcon">🎉</div>
+    <div class="final-score-label">Final Score</div>
+    <div class="final-score" id="finalScore">0</div>
+    <div class="stars" id="stars">⭐⭐⭐</div>
+    <div class="rank-title" id="rankTitle">AI Little Expert</div>
+    <p class="rank-desc" id="rankDesc">Great job!</p>
+    <p class="save-status" id="saveStatus" role="status"></p>
+    <div class="leaderboard-actions">
+      <button class="btn blue" onclick="showLeaderboard('screen-final'); playSound('click')">
+        🏆 View Leaderboard
+      </button>
+      <button class="btn orange" onclick="restart(); playSound('click')">
+        🔄 Play Again
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     5. Leaderboard Screen
+     ============================================================ -->
+<section id="screen-leaderboard" class="screen">
+  <h2 class="leaderboard-title">🏆 AI Little Expert Leaderboard</h2>
+  <p class="leaderboard-desc">All completed games on this device, ranked by final score.</p>
+  <div class="leaderboard-wrap">
+    <table class="leaderboard-table">
+      <thead>
+        <tr><th>Rank</th><th>Name</th><th>Final Score</th><th>Date</th></tr>
+      </thead>
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+    <p class="leaderboard-empty" id="leaderboardEmpty" hidden>No scores yet. Finish a game to appear here!</p>
+    <p class="leaderboard-error" id="leaderboardError" role="alert" hidden></p>
+  </div>
+  <div class="leaderboard-actions">
+    <button class="btn ghost" onclick="returnFromLeaderboard(); playSound('click')">← Back</button>
+  </div>
+</section>
+
+<!-- Confetti layer -->
+<canvas class="confetti" id="confettiCanvas"></canvas>
+
+<script>
+/* ============================================================
+   AI Little Expert · Game Logic (English)
+   ============================================================ */
+
+/* ---------- Global state ---------- */
+const state = {
+  stage: 1,          // current stage 1 / 2 / 3
+  score: 0,          // total score
+  playerName: "",    // participant name for the current game
+  leaderboardReturnScreen: "screen-start",
+  qIndex: 0,         // current question index
+  answered: false,   // whether current question is answered
+  selected: null,    // selected scenario in matching stage
+  matchResult: { correct: 0, wrong: 0 } // matching stats
+};
+
+/* ============================================================
+   Question Bank
+   Each question includes: stem, options, correct answer index,
+   and a hint for each wrong option.
+   ============================================================ */
+const stage1Questions = [
+  {
+    stem: "🤔 What is Artificial Intelligence (AI)?",
+    options: [
+      "A living creature that can think on its own",
+      "A technology that lets computers mimic human intelligence",
+      "A new kind of electronic toy",
+      "A super-large computer"
+    ],
+    answer: 1,
+    hints: {
+      0: "AI is not a living creature — it's a program written by humans.",
+      2: "AI is not just a toy; it helps solve many real-world problems.",
+      3: "AI is a method/technology, not just a piece of hardware."
+    }
+  },
+  {
+    stem: "Which of the following is <strong>NOT</strong> an application of AI?",
+    options: [
+      "Voice assistants (like Siri, Alexa)",
+      "Face recognition to unlock a phone",
+      "Using a calculator to do 1+1=2",
+      "A video app recommending content you like"
+    ],
+    answer: 2,
+    hints: {
+      0: "Voice assistants understand human speech — that's AI speech recognition.",
+      1: "Face recognition lets the phone 'know' its owner — that's AI computer vision.",
+      3: "Recommendation systems learn your preferences — a classic AI application."
+    }
+  },
+  {
+    stem: "🧠 What is the relationship between Machine Learning and AI?",
+    options: [
+      "They are completely unrelated",
+      "Machine Learning is a branch of AI",
+      "AI is a part of Machine Learning",
+      "They are exactly the same thing"
+    ],
+    answer: 1,
+    hints: {
+      0: "They are closely related — Machine Learning is an important way to build AI.",
+      2: "That's backwards! Machine Learning is the smaller field; AI is the bigger one.",
+      3: "AI also includes rule-based reasoning, not only Machine Learning."
+    }
+  },
+  {
+    stem: "👁️ What technology mainly lets AI 'see' things in images?",
+    options: [
+      "Computer Vision",
+      "Natural Language Processing",
+      "Robotics",
+      "Cloud Computing"
+    ],
+    answer: 0,
+    hints: {
+      1: "Natural Language Processing helps AI understand human text and speech.",
+      2: "Robots are carriers of AI, not the core technology for 'seeing'.",
+      3: "Cloud Computing provides computing power, not image understanding."
+    }
+  },
+  {
+    stem: "📚 'AI learns patterns from large amounts of data by itself' describes what?",
+    options: [
+      "Machine Learning",
+      "Manual human programming",
+      "Data storage and backup",
+      "Connecting to the internet"
+    ],
+    answer: 0,
+    hints: {
+      1: "Manual programming means humans write fixed rules; AI can't learn from data that way.",
+      2: "Storing data doesn't mean the AI learns patterns from it.",
+      3: "Going online is just a way to get data, not learning itself."
+    }
+  }
+];
+
+/* ============================================================
+   Stage 2: AI Application Scenario Classification (Matching)
+   ============================================================ */
+const stage2Data = {
+  categories: [
+    { id: "cv",    name: "Computer Vision", emoji: "👁️" },
+    { id: "nlp",   name: "Natural Language Processing", emoji: "💬" },
+    { id: "speech",name: "Speech Recognition", emoji: "🎤" },
+    { id: "rec",   name: "Recommendation System", emoji: "🎬" }
+  ],
+  scenarios: [
+    { text: "Face recognition to unlock a phone", cat: "cv",
+      hint: "This lets computers 'see' and recognize faces in images." },
+    { text: "Chatting with a smart speaker", cat: "nlp",
+      hint: "It lets AI understand and reply to human speech." },
+    { text: "Converting voice into text notes", cat: "speech",
+      hint: "It turns sound signals into written words." },
+    { text: "A short-video app recommending videos you like", cat: "rec",
+      hint: "It guesses what you want to watch based on your preferences." },
+    { text: "A self-driving car detecting pedestrians", cat: "cv",
+      hint: "It lets the car 'see' people and vehicles on the road." },
+    { text: "Translating an English article into Filipino", cat: "nlp",
+      hint: "It processes and converts human language text." },
+    { text: "A voice assistant understanding 'turn on the lights'", cat: "speech",
+      hint: "It recognizes the words you speak." },
+    { text: "A shopping site suggesting products you might buy", cat: "rec",
+      hint: "It recommends items based on your browsing history." }
+  ]
+};
+
+/* ============================================================
+   Stage 3: Ethics & Responsibility (Multiple Choice)
+   ============================================================ */
+const stage3Questions = [
+  {
+    stem: "📰 You see fake news generated by AI online. What should you do?",
+    options: [
+      "Share it with all your friends right away",
+      "Check the source first before deciding if it's true",
+      "Ignore it and just scroll away",
+      "Make up an even more interesting one yourself"
+    ],
+    answer: 1,
+    hints: {
+      0: "Sharing fake news might trick more people.",
+      2: "It would be even better to warn people around you — ignoring isn't ideal.",
+      3: "Making and spreading false information is wrong."
+    }
+  },
+  {
+    stem: "🏫 The school wants to install AI face recognition everywhere. What's your view?",
+    options: [
+      "It's totally fine — the more the better",
+      "Student privacy should be protected, and it should be used carefully",
+      "All AI technology should be banned",
+      "It doesn't matter — it's none of my business"
+    ],
+    answer: 1,
+    hints: {
+      0: "We should think about the risk of face data being misused.",
+      2: "AI itself is neither good nor bad — it depends on how it's used.",
+      3: "Privacy is everyone's right, and it does affect us."
+    }
+  },
+  {
+    stem: "📝 Using AI to finish your homework and then saying you wrote it yourself — this behavior is:",
+    options: [
+      "Very smart, saves time",
+      "Dishonest and goes against academic integrity",
+      "Okay as long as the teacher doesn't find out",
+      "Fine — we should take every chance to be lazy"
+    ],
+    answer: 1,
+    hints: {
+      0: "That's not real smarts — learning is meant to help you grow.",
+      2: "Being honest matters more than not getting caught.",
+      3: "Being lazy only robs you of the chance to learn."
+    }
+  },
+  {
+    stem: "⚖️ AI sometimes treats some groups unfairly (has bias). What is the usual reason?",
+    options: [
+      "AI has its own likes and dislikes",
+      "The training data itself contains bias",
+      "AI intentionally acts unfairly",
+      "The computer hardware is broken"
+    ],
+    answer: 1,
+    hints: {
+      0: "AI has no personal preferences — it only learns patterns in the data.",
+      2: "AI has no intentions and cannot 'intentionally' be unfair.",
+      3: "Hardware failure has nothing to do with bias."
+    }
+  },
+  {
+    stem: "🤝 Which statement about the relationship between AI and humans is correct?",
+    options: [
+      "AI will completely replace all human jobs",
+      "AI is a tool; humans are responsible for decisions and creation",
+      "With AI around, humans don't need to learn anymore",
+      "AI is smarter than humans, so we should do everything AI says"
+    ],
+    answer: 1,
+    hints: {
+      0: "AI can assist work, but creativity and feelings are uniquely human.",
+      2: "The more AI we have, the more we need to learn how to use it well.",
+      3: "AI also makes mistakes — important decisions should still be made by humans."
+    }
+  }
+];
+
+/* ============================================================
+   Sound system: real-time synthesis via Web Audio API (no external files)
+   ============================================================ */
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
+}
+function playSound(type) {
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+
+  if (type === "correct") {
+    // Rising three-note chord
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.frequency.value = f; o.type = "sine";
+      g.gain.setValueAtTime(0, now + i*0.08);
+      g.gain.linearRampToValueAtTime(0.25, now + i*0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.3);
+      o.start(now + i*0.08); o.stop(now + i*0.08 + 0.3);
+    });
+    return;
+  }
+  if (type === "wrong") {
+    osc.frequency.value = 180; osc.type = "sawtooth";
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start(now); osc.stop(now + 0.35);
+    return;
+  }
+  if (type === "win") {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.frequency.value = f; o.type = "triangle";
+      g.gain.setValueAtTime(0, now + i*0.12);
+      g.gain.linearRampToValueAtTime(0.3, now + i*0.12 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.12 + 0.4);
+      o.start(now + i*0.12); o.stop(now + i*0.12 + 0.4);
+    });
+    return;
+  }
+  // click
+  osc.frequency.value = 660; osc.type = "square";
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  osc.start(now); osc.stop(now + 0.08);
+}
+
+/* ============================================================
+   Screen switching
+   ============================================================ */
+function go(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(screenId).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function showInstructions() {
+  const nameInput = document.getElementById("playerName");
+  nameInput.value = nameInput.value.trim();
+  if (!nameInput.reportValidity()) return;
+  go("screen-instructions");
+  playSound("click");
+}
+
+/* ============================================================
+   Start game
+   ============================================================ */
+function startGame() {
+  state.playerName = document.getElementById("playerName").value.trim();
+  state.stage = 1;
+  state.score = 0;
+  state.qIndex = 0;
+  updateHUD();
+  loadStage1();
+  go("screen-game");
+}
+
+/* ---------- HUD update ---------- */
+function updateHUD() {
+  document.getElementById("scoreText").textContent = state.score;
+  const tags = {
+    1: "Stage 1 · Concepts 🧩",
+    2: "Stage 2 · Applications 🗂️",
+    3: "Stage 3 · Ethics ⚖️"
+  };
+  document.getElementById("stageTag").textContent = tags[state.stage];
+}
+
+function setProgress(current, total) {
+  const pct = Math.min(100, (current / total) * 100);
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+/* ============================================================
+   Stage 1: Concepts (Multiple Choice)
+   ============================================================ */
+function loadStage1() {
+  state.qIndex = 0;
+  showStage1Question();
+}
+
+function showStage1Question() {
+  const q = stage1Questions[state.qIndex];
+  state.answered = false;
+  setProgress(state.qIndex, stage1Questions.length);
+
+  const area = document.getElementById("questionArea");
+  area.innerHTML = `
+    <div class="question-card">
+      <div class="q-stem">${q.stem}</div>
+      <div class="options" id="optList">
+        ${q.options.map((opt, i) => `
+          <button class="option" data-i="${i}">
+            <span class="key">${String.fromCharCode(65+i)}</span>
+            <span>${opt}</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="hint-box" id="hintBox"></div>
+    </div>
+  `;
+
+  document.getElementById("actionRow").innerHTML = "";
+
+  // Bind option clicks
+  document.querySelectorAll(".option").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.answered) return;
+      const idx = parseInt(btn.dataset.i);
+      handleStage1Answer(idx);
+    });
+  });
+}
+
+function handleStage1Answer(idx) {
+  state.answered = true;
+  const q = stage1Questions[state.qIndex];
+  const opts = document.querySelectorAll(".option");
+  const hintBox = document.getElementById("hintBox");
+
+  if (idx === q.answer) {
+    // Correct
+    opts[idx].classList.add("correct");
+    state.score += 10;
+    updateHUD();
+    playSound("correct");
+    hintBox.className = "hint-box show";
+    hintBox.innerHTML = `<b>🎉 Correct!</b> +10 points!`;
+  } else {
+    // Wrong
+    opts[idx].classList.add("wrong");
+    opts[q.answer].classList.add("correct");
+    playSound("wrong");
+    const hintText = q.hints[idx] || "Think again — the correct answer is highlighted.";
+    hintBox.className = "hint-box show";
+    hintBox.innerHTML = `<b>💡 Hint:</b> ${hintText}`;
+  }
+
+  opts.forEach(o => o.classList.add("disabled"));
+
+  // Show next button
+  const isLast = state.qIndex >= stage1Questions.length - 1;
+  document.getElementById("actionRow").innerHTML = `
+    <button class="btn blue" onclick="nextStage1(); playSound('click')">
+      ${isLast ? "Go to Stage 2 ▶" : "Next Question →"}
+    </button>
+  `;
+}
+
+function nextStage1() {
+  state.qIndex++;
+  if (state.qIndex < stage1Questions.length) {
+    showStage1Question();
+  } else {
+    // Move to Stage 2
+    state.stage = 2;
+    updateHUD();
+    loadStage2();
+  }
+}
+
+/* ============================================================
+   Stage 2: AI Application Scenario Classification (Matching)
+   ============================================================ */
+function loadStage2() {
+  state.selected = null;
+  state.matchResult = { correct: 0, wrong: 0 };
+  state.qIndex = 0; // used as matched count
+  setProgress(0, stage2Data.scenarios.length);
+
+  // Shuffle scenario order (categories stay fixed)
+  const shuffled = [...stage2Data.scenarios].sort(() => Math.random() - 0.5);
+
+  const area = document.getElementById("questionArea");
+  area.innerHTML = `
+    <div class="question-card">
+      <div class="q-stem">🗂️ Match each application scenario on the left with the correct AI technology category on the right!</div>
+      <div class="match-area">
+        <div class="match-col">
+          <h3>🎯 Application Scenarios</h3>
+          <div class="scenario-list" id="scenarioList">
+            ${shuffled.map((s, i) => `
+              <div class="scenario" data-idx="${i}">${s.text}</div>
+            `).join("")}
+          </div>
+        </div>
+        <div class="match-col">
+          <h3>🏷️ AI Technology Categories</h3>
+          <div class="category-list" id="categoryList">
+            ${stage2Data.categories.map(c => `
+              <div class="category" data-cat="${c.id}">
+                <span class="cat-emoji">${c.emoji}</span>${c.name}
+              </div>
+            `).join("")}
+          </div>
+          <div class="match-hint" id="matchHint">👆 First click a scenario, then click its matching category</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("actionRow").innerHTML = "";
+
+  // Save scenario data to DOM reference
+  window._stage2Scenarios = shuffled;
+
+  // Bind scenario clicks
+  document.querySelectorAll(".scenario").forEach(el => {
+    el.addEventListener("click", () => {
+      if (el.classList.contains("matched")) return;
+      document.querySelectorAll(".scenario").forEach(s => s.classList.remove("selected"));
+      el.classList.add("selected");
+      state.selected = parseInt(el.dataset.idx);
+      document.getElementById("matchHint").textContent = "Scenario selected — now click the matching category 👉";
+    });
+  });
+
+  // Bind category clicks
+  document.querySelectorAll(".category").forEach(el => {
+    el.addEventListener("click", () => {
+      if (state.selected === null) {
+        document.getElementById("matchHint").textContent = "⚠️ Please click a scenario first!";
+        return;
+      }
+      const scenario = window._stage2Scenarios[state.selected];
+      const chosenCat = el.dataset.cat;
+      const scenarioEl = document.querySelector(`.scenario[data-idx="${state.selected}"]`);
+
+      if (scenario.cat === chosenCat) {
+        // Correct match
+        scenarioEl.classList.remove("selected");
+        scenarioEl.classList.add("matched");
+        state.score += 10;
+        state.matchResult.correct++;
+        updateHUD();
+        playSound("correct");
+        document.getElementById("matchHint").innerHTML =
+          `<span style="color:var(--c-correct);font-weight:700;">✅ Correct! +10 pts — ${scenario.hint}</span>`;
+      } else {
+        // Wrong match
+        state.matchResult.wrong++;
+        playSound("wrong");
+        const correctCatName = stage2Data.categories.find(c => c.id === scenario.cat).name;
+        document.getElementById("matchHint").innerHTML =
+          `<span style="color:var(--c-wrong);font-weight:700;">❌ Try again! Hint: ${scenario.hint} (belongs to "${correctCatName}")</span>`;
+        // Wrong shake animation
+        scenarioEl.style.animation = "shakeBad .4s";
+        setTimeout(() => scenarioEl.style.animation = "", 400);
+      }
+
+      state.selected = null;
+      state.qIndex = state.matchResult.correct;
+      setProgress(state.qIndex, stage2Data.scenarios.length);
+
+      // All matched
+      if (state.matchResult.correct >= stage2Data.scenarios.length) {
+        setTimeout(() => {
+          document.getElementById("matchHint").textContent = "🎉 All matched!";
+          document.getElementById("actionRow").innerHTML = `
+            <button class="btn blue" onclick="finishStage2(); playSound('click')">
+              Go to Stage 3 ▶
+            </button>
+          `;
+        }, 600);
+      }
+    });
+  });
+}
+
+function finishStage2() {
+  state.stage = 3;
+  updateHUD();
+  loadStage3();
+}
+
+/* ============================================================
+   Stage 3: Ethics & Responsibility (Multiple Choice)
+   ============================================================ */
+function loadStage3() {
+  state.qIndex = 0;
+  showStage3Question();
+}
+
+function showStage3Question() {
+  const q = stage3Questions[state.qIndex];
+  state.answered = false;
+  setProgress(state.qIndex, stage3Questions.length);
+
+  const area = document.getElementById("questionArea");
+  area.innerHTML = `
+    <div class="question-card">
+      <div class="q-stem">${q.stem}</div>
+      <div class="options" id="optList">
+        ${q.options.map((opt, i) => `
+          <button class="option" data-i="${i}">
+            <span class="key">${String.fromCharCode(65+i)}</span>
+            <span>${opt}</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="hint-box" id="hintBox"></div>
+    </div>
+  `;
+  document.getElementById("actionRow").innerHTML = "";
+
+  document.querySelectorAll(".option").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.answered) return;
+      handleStage3Answer(parseInt(btn.dataset.i));
+    });
+  });
+}
+
+function handleStage3Answer(idx) {
+  state.answered = true;
+  const q = stage3Questions[state.qIndex];
+  const opts = document.querySelectorAll(".option");
+  const hintBox = document.getElementById("hintBox");
+
+  if (idx === q.answer) {
+    opts[idx].classList.add("correct");
+    state.score += 10;
+    updateHUD();
+    playSound("correct");
+    hintBox.className = "hint-box show";
+    hintBox.innerHTML = `<b>🎉 Correct!</b> You're a responsible AI Little Expert! +10 pts`;
+  } else {
+    opts[idx].classList.add("wrong");
+    opts[q.answer].classList.add("correct");
+    playSound("wrong");
+    hintBox.className = "hint-box show";
+    hintBox.innerHTML = `<b>💡 Think about it:</b> ${q.hints[idx] || "The correct answer is highlighted."}`;
+  }
+  opts.forEach(o => o.classList.add("disabled"));
+
+  const isLast = state.qIndex >= stage3Questions.length - 1;
+  document.getElementById("actionRow").innerHTML = `
+    <button class="btn blue" onclick="nextStage3(); playSound('click')">
+      ${isLast ? "See Results 🏆" : "Next Question →"}
+    </button>
+  `;
+}
+
+function nextStage3() {
+  state.qIndex++;
+  if (state.qIndex < stage3Questions.length) {
+    showStage3Question();
+  } else {
+    finishGame();
+  }
+}
+
+/* ============================================================
+   Leaderboard
+   ============================================================ */
+const LEADERBOARD_KEY = "aiLittleExpertLeaderboard";
+
+function readLeaderboard() {
+  const stored = localStorage.getItem(LEADERBOARD_KEY);
+  if (stored === null) return [];
+
+  const entries = JSON.parse(stored);
+  if (!Array.isArray(entries) || !entries.every(entry =>
+    entry &&
+    typeof entry.name === "string" &&
+    Number.isFinite(entry.score) &&
+    typeof entry.completedAt === "string" &&
+    Number.isFinite(Date.parse(entry.completedAt))
+  )) {
+    throw new Error("The saved leaderboard data has an invalid format.");
+  }
+  return entries;
+}
+
+function saveScore(name, score) {
+  try {
+    const entries = readLeaderboard();
+    entries.push({ name, score, completedAt: new Date().toISOString() });
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+    return null;
+  } catch (error) {
+    console.error("Unable to save the leaderboard score:", error);
+    return error.message || "Your browser could not save this score.";
+  }
+}
+
+function showLeaderboard(returnScreen) {
+  state.leaderboardReturnScreen = returnScreen;
+  const body = document.getElementById("leaderboardBody");
+  const empty = document.getElementById("leaderboardEmpty");
+  const errorMessage = document.getElementById("leaderboardError");
+  body.replaceChildren();
+  empty.hidden = true;
+  errorMessage.hidden = true;
+
+  try {
+    const entries = readLeaderboard().sort((a, b) =>
+      b.score - a.score || Date.parse(a.completedAt) - Date.parse(b.completedAt)
+    );
+    if (entries.length === 0) {
+      empty.hidden = false;
+    } else {
+      let previousScore = null;
+      let rank = 0;
+      entries.forEach((entry, index) => {
+        if (entry.score !== previousScore) rank = index + 1;
+        previousScore = entry.score;
+
+        const row = document.createElement("tr");
+        [rank === 1 ? "🥇 1" : rank === 2 ? "🥈 2" : rank === 3 ? "🥉 3" : String(rank),
+          entry.name, String(entry.score), new Date(entry.completedAt).toLocaleDateString()]
+          .forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+        body.appendChild(row);
+      });
+    }
+  } catch (error) {
+    console.error("Unable to load the leaderboard:", error);
+    errorMessage.textContent = `Could not load the leaderboard: ${error.message || "Unknown storage error."}`;
+    errorMessage.hidden = false;
+  }
+  go("screen-leaderboard");
+}
+
+function returnFromLeaderboard() {
+  go(state.leaderboardReturnScreen);
+}
+
+/* ============================================================
+   Final: Ranking + Confetti
+   ============================================================ */
+function finishGame() {
+  const total = stage1Questions.length * 10
+              + stage2Data.scenarios.length * 10
+              + stage3Questions.length * 10;
+  // total = 50 + 80 + 50 = 180
+  const ratio = state.score / total;
+
+  let rankIcon, rankTitle, rankDesc, stars;
+  if (ratio >= 0.9) {
+    rankIcon = "🏆"; rankTitle = "AI Super Expert"; stars = "⭐⭐⭐";
+    rankDesc = "Amazing! You've mastered AI concepts, applications, and ethics. Keep your curiosity alive — the future AI master could be you!";
+  } else if (ratio >= 0.7) {
+    rankIcon = "🥈"; rankTitle = "AI Little Expert"; stars = "⭐⭐";
+    rankDesc = "Great job! You already know a lot about AI. Review the questions you missed, and you'll become a true AI expert!";
+  } else if (ratio >= 0.5) {
+    rankIcon = "🥉"; rankTitle = "AI Learner"; stars = "⭐";
+    rankDesc = "Keep going! The world of AI is really fun. Read the hints more carefully, and you'll do even better next time!";
+  } else {
+    rankIcon = "🌱"; rankTitle = "AI Explorer"; stars = "";
+    rankDesc = "Don't give up! Everyone starts from not knowing. Play again, and you'll find AI is actually simple and interesting!";
+  }
+
+  document.getElementById("rankIcon").textContent = rankIcon;
+  document.getElementById("finalScore").textContent = state.score;
+  document.getElementById("stars").textContent = stars || "—";
+  document.getElementById("rankTitle").textContent = rankTitle;
+  document.getElementById("rankDesc").textContent = rankDesc;
+  const saveError = saveScore(state.playerName, state.score);
+  document.getElementById("saveStatus").textContent = saveError
+    ? `⚠️ Score not saved: ${saveError}`
+    : "✅ Your score has been saved to this device's leaderboard.";
+
+  go("screen-final");
+  playSound("win");
+  if (ratio >= 0.5) launchConfetti();
+}
+
+/* ---------- Restart ---------- */
+function restart() {
+  state.stage = 1; state.score = 0; state.qIndex = 0;
+  go("screen-start");
+}
+
+/* ============================================================
+   Confetti animation (Canvas, no third-party library)
+   ============================================================ */
+function launchConfetti() {
+  const canvas = document.getElementById("confettiCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ["#ff6b9d","#ffd93d","#6bcb77","#4d96ff","#a66cff","#ff9f43","#00cec9"];
+  const particles = [];
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height,
+      w: 8 + Math.random() * 8,
+      h: 6 + Math.random() * 6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      vy: 2 + Math.random() * 4,
+      vx: -2 + Math.random() * 4,
+      rot: Math.random() * Math.PI,
+      vr: -0.2 + Math.random() * 0.4
+    });
+  }
+  let frames = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.y += p.vy; p.x += p.vx; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    frames++;
+    if (frames < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+
+/* Resize confetti canvas on window resize */
+window.addEventListener("resize", () => {
+  const canvas = document.getElementById("confettiCanvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
